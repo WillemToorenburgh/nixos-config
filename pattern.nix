@@ -7,6 +7,13 @@
     ./nvidia.nix
   ];
 
+  # Bootloader.
+  boot.loader = {
+    systemd-boot.enable = true;
+    systemd-boot.configurationLimit = 5;
+    efi.canTouchEfiVariables = true;
+  };
+
   # Kernel modules identified on the system by lm_sensors' sensors-detect
   boot.kernelModules = [ "jc42" "nct6775" ];
 
@@ -33,6 +40,22 @@
       enable = true;
     };
   };
+
+  networking = {
+    hostName = "pattern-nixos"; # Define your hostname.
+    # wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+
+    # Configure network proxy if necessary
+    # proxy.default = "http://user:password@proxy:port/";
+    # proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+
+    # Enable networking
+    networkmanager.enable = true;
+  };
+
+  # Enable the X11 windowing system.
+  # You can disable this if you're only using the Wayland session.
+  services.xserver.enable = true;
 
   # Make displays behave as expected at login screen
   services.displayManager.sddm.setupScript = ''
