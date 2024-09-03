@@ -95,6 +95,8 @@
       bottles
       vlc
       ktailctl
+      # Epson printer support
+      epson-escpr
       # Try out these and eliminate whichever I don't want to use
       kdePackages.yakuake
       kdePackages.ktorrent
@@ -131,6 +133,12 @@
 #     settings = {
 #
 #     };
+  };
+
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
   };
 
   programs.gamescope.enable = true;
@@ -227,17 +235,28 @@
 
   # Open ports in the firewall.
   networking.firewall = {
-    # Allow Spotify access to local network (TCP)
-    allowedTCPPorts = [57621];
+    allowedTCPPorts = [
+      # Allow Spotify access to local network (TCP)
+      57621
+      # Phasmophobia
+      27015
+      27036
+    ];
     allowedTCPPortRanges = [
       # Allow KDE Connect (TCP)
       { from = 1714; to = 1764; }
     ];
-    # Allow Spotify access to local network (UDP)
-    allowedUDPPorts = [57621];
+    allowedUDPPorts = [
+      # Allow Spotify access to local network (UDP)
+      57621
+      # Phasmophobia
+      27015
+    ];
     allowedUDPPortRanges = [
       # Allow KDE Connect (UDP)
       { from = 1714; to = 1764; }
+      # Phasmophobia
+      { from = 27031; to = 27036; }
     ];
     # Allow Spotify access to multicast DNS
     # NOTE: this needs to be replaced with extraInputRules if switching to nftables

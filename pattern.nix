@@ -16,6 +16,8 @@
 
   # Kernel modules identified on the system by lm_sensors' sensors-detect
   boot.kernelModules = [ "jc42" "nct6775" ];
+#   Breaks on boot
+#   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   environment.etc = {
     "sysconfig/lm_sensors".text = ''
