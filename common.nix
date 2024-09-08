@@ -1,6 +1,11 @@
 { config, pkgs, lib, ... }:
 
 {
+  imports = [
+      ./plasma-discover-flatpak.nix
+      ./appimage-support.nix
+  ];
+
   # Set your time zone.
   time.timeZone = "America/Vancouver";
 
@@ -116,6 +121,12 @@
       kmymoney
       skrooge
     ];
+  };
+
+  programs.git = {
+    enable = true;
+    package = pkgs.gitFull;
+    config.credential.helper = "libsecret";
   };
 
   programs.steam = {
@@ -236,7 +247,7 @@
   # Open ports in the firewall.
   networking.firewall = {
     allowedTCPPorts = [
-      # Allow Spotify access to local network (TCP)
+    # Allow Spotify access to local network (TCP)
       57621
       # Phasmophobia
       27015
@@ -247,7 +258,7 @@
       { from = 1714; to = 1764; }
     ];
     allowedUDPPorts = [
-      # Allow Spotify access to local network (UDP)
+    # Allow Spotify access to local network (UDP)
       57621
       # Phasmophobia
       27015
