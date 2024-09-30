@@ -6,6 +6,14 @@
       ./appimage-support.nix
   ];
 
+  nixpkgs.config.packageOverrides = pkgs: {
+    unstable = import <nixos-unstable> {
+      config = config.nixpkgs.config;
+    };
+  };
+
+  nix.settings.auto-optimise-store = true;
+
   # Set your time zone.
   time.timeZone = "America/Vancouver";
 
@@ -118,10 +126,18 @@
       kdePackages.kontact
       kdePackages.kmail-account-wizard
       kdePackages.kdepim-addons
+      # KDE office suite
+      unstable.kdePackages.calligra
       kmymoney
       skrooge
     ];
   };
+
+  # Temporarily allow insecure qtwebkit
+  # TODO: remove this as soon as Calligra is upgraded to 4.0
+#   nixpkgs.config.permittedInsecurePackages = [
+#     "qtwebkit-5.212.0-alpha4"
+#   ];
 
   programs.git = {
     enable = true;

@@ -3,8 +3,10 @@
 {
   imports = [
     ./hardware-configuration.nix
-#     <nixos-hardware/microsoft/surface/surface-pro-intel>
-    #./nvidia.nix
+    <nixos-hardware/microsoft/surface/surface-pro-intel>
+    ./remote-build-client.nix
+    ./nvidia.nix
+
   ];
 
 #   microsoft-surface = {
@@ -15,7 +17,6 @@
   services.iptsd = {
     enable = true;
   };
-
 
   boot.loader = {
     systemd-boot.enable = true;
@@ -60,6 +61,18 @@
 
   users.users.willem = {
     extraGroups = [ "surface-control" ];
+  };
+
+  # Nvidia support
+  hardware.nvidia.prime = {
+    offload = {
+      enable = true;
+      enableOffloadCmd = true;
+    };
+#     pci@0000:00:02.0
+    intelBusId = "PCI:2:0:0";
+#     pci@0000:02:00.0
+    nvidiaBusId = "PCI:0:2:0";
   };
 
   environment.systemPackages = with pkgs; [
