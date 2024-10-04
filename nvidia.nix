@@ -1,6 +1,14 @@
- { pkgs, config, libs, lib, ... }:
+{ pkgs, config, libs, lib, ... }:
 
- {
+# let
+#   # Fixes framebuffer with linux 6.11
+#   fbdev_linux_611_patch = fetchpatch {
+#     url = "https://patch-diff.githubusercontent.com/raw/NVIDIA/open-gpu-kernel-modules/pull/692.patch";
+#     hash = "sha256-OYw8TsHDpBE5DBzdZCBT45+AiznzO9SfECz5/uXN5Uc=";
+#   };
+# in
+
+{
   #  Enable OpenGL
     hardware.opengl = {
         enable = true;
@@ -37,28 +45,29 @@
 
         # Enable the Nvidia settings menu,
         # accessible via `nvidia-settings`.
-        nvidiaSettings = true;
+        nvidiaSettings = false;
 
         # Optionally, you may need to select the appropriate driver version for your specific GPU.
         # Stable at 550.x.x
 #         package = config.boot.kernelPackages.nvidiaPackages.production;
-        # Manual build at 555.52.04
-#         package = config.boot.kernelPackages.nvidiaPackages.mkDriver {
-#             version = "555.52.04";
-#             sha256_64bit = "sha256-nVOubb7zKulXhux9AruUTVBQwccFFuYGWrU1ZiakRAI=";
-#             sha256_aarch64 = "sha256-Kt60kTTO3mli66De2d1CAoE3wr0yUbBe7eqCIrYHcWk=";
-#             openSha256 = "sha256-wDimW8/rJlmwr1zQz8+b1uvxxxbOf3Bpk060lfLKuy0=";
-#             settingsSha256 = "sha256-PMh5efbSEq7iqEMBr2+VGQYkBG73TGUh6FuDHZhmwHk=";
-#             persistencedSha256 = "sha256-KAYIvPjUVilQQcD04h163MHmKcQrn2a8oaXujL2Bxro=";
-#         };
         # Manual build at 555.58.02
+        # package = config.boot.kernelPackages.nvidiaPackages.mkDriver {
+        #     version = "555.58.02";
+        #     sha256_64bit = "sha256-xctt4TPRlOJ6r5S54h5W6PT6/3Zy2R4ASNFPu8TSHKM=";
+        #     sha256_aarch64 = "sha256-wb20isMrRg8PeQBU96lWJzBMkjfySAUaqt4EgZnhyF8=";
+        #     openSha256 = "sha256-8hyRiGB+m2hL3c9MDA/Pon+Xl6E788MZ50WrrAGUVuY=";
+        #     settingsSha256 = "sha256-ZpuVZybW6CFN/gz9rx+UJvQ715FZnAOYfHn5jt5Z2C8=";
+        #     persistencedSha256 = "sha256-a1D7ZZmcKFWfPjjH1REqPM5j/YLWKnbkP9qfRyIyxAw=";
+        # };
+        # Manual build at 560.35.03
         package = config.boot.kernelPackages.nvidiaPackages.mkDriver {
-            version = "555.58.02";
-            sha256_64bit = "sha256-xctt4TPRlOJ6r5S54h5W6PT6/3Zy2R4ASNFPu8TSHKM=";
-            sha256_aarch64 = "sha256-wb20isMrRg8PeQBU96lWJzBMkjfySAUaqt4EgZnhyF8=";
-            openSha256 = "sha256-8hyRiGB+m2hL3c9MDA/Pon+Xl6E788MZ50WrrAGUVuY=";
-            settingsSha256 = "sha256-ZpuVZybW6CFN/gz9rx+UJvQ715FZnAOYfHn5jt5Z2C8=";
-            persistencedSha256 = "sha256-a1D7ZZmcKFWfPjjH1REqPM5j/YLWKnbkP9qfRyIyxAw=";
+            version = "560.35.03";
+            sha256_64bit = "sha256-8pMskvrdQ8WyNBvkU/xPc/CtcYXCa7ekP73oGuKfH+M=";
+            sha256_aarch64 = "sha256-s8ZAVKvRNXpjxRYqM3E5oss5FdqW+tv1qQC2pDjfG+s=";
+            openSha256 = "sha256-/32Zf0dKrofTmPZ3Ratw4vDM7B+OgpC4p7s+RHUjCrg=";
+            settingsSha256 = "sha256-kQsvDgnxis9ANFmwIwB7HX5MkIAcpEEAHc8IBOLdXvk=";
+            persistencedSha256 = "sha256-E2J2wYYyRu7Kc3MMZz/8ZIemcZg68rkzvqEwFAL3fFs=";
+#             patchesOpen = [ fbdev_linux_611_patch ];
         };
     };
 
