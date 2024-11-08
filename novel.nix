@@ -3,10 +3,9 @@
 {
   imports = [
     ./hardware-configuration.nix
-    <nixos-hardware/microsoft/surface/surface-pro-intel>
     ./remote-build-client.nix
+#     <nixos-hardware/microsoft/surface/surface-pro-intel>``
     ./nvidia.nix
-
   ];
 
 #   microsoft-surface = {
