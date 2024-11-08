@@ -6,17 +6,22 @@
     ./hardware-configuration.nix
     ./nvidia.nix
     ./remote-build-support.nix
+    ./unity-editor-support.nix
   ];
 
-  # Bootloader.
-  boot.loader = {
-    systemd-boot.enable = true;
-    systemd-boot.configurationLimit = 5;
-    efi.canTouchEfiVariables = true;
-  };
-
   # Kernel modules identified on the system by lm_sensors' sensors-detect
-  boot.kernelModules = [ "jc42" "nct6775" ];
+  boot = {
+    loader = {
+      systemd-boot.enable = true;
+#       systemd-boot.configurationLimit = 5;
+      efi.canTouchEfiVariables = true;
+    };
+
+    kernelModules = [ "jc42" "nct6775" ];
+    initrd = {
+      kernelModules = [ "nfs" ];
+    };
+  };
 
   environment.etc = {
     "sysconfig/lm_sensors".text = ''
@@ -91,6 +96,8 @@
     uhk-agent
     # Also mainly for System Info
     fwupd-efi
+    # Support for NFS
+    nfs-utils
   ];
 
   fileSystems = {
@@ -104,11 +111,25 @@
       fsType = "ntfs-3g";
       options = [ "rw" "uid=1000" "nofail" ];
     };
+
+    # Backup destinations
+    # TODO: turn these into real Borg jobs
+#     "/run/media/willem/borg/root" = {
+#       device = "storingfraser.couchlan:/WillemStorage/Borg/root";
+#       neededForBoot = false;
+#       fsType = "nfs";
+#       options = [ "nfsvers=4.1" "x-systemd.automount" "x-systemd.idle-timeout=600" "noauto" "nofail" "user" "rw" ];
+#     };
+#     "/run/media/willem/borg/home" = {
+#       device = "storingfraser.couchlan:/WillemStorage/Borg/home";
+#       neededForBoot = false;
+#       fsType = "nfs";
+#       options = [ "nfsvers=4.1" "x-systemd.automount" "x-systemd.idle-timeout=600" "noauto" "nofail" "user" "rw" ];
+#     };
   };
 
   swapDevices = [ {
-    device = "/var/lib/swapfile";
-    size = 32*1024;
+    device = "/dev/disk/by-uuid/67773c4e-37b7-45ac-9461-582b0f7a5ee2";
   } ];
 
   time.hardwareClockInLocalTime = true;
