@@ -294,9 +294,15 @@
     ];
     # Allow Spotify access to multicast DNS
     # NOTE: this needs to be replaced with extraInputRules if switching to nftables
+    # NOTE: 10.0.0.198 is Screen's IP, should reserve that in DHCP
+    # NOTE: 239.255.255.250 is a special multicast address
     extraCommands = ''
       iptables -A INPUT -p udp --sport 1900 --dport 1025:65535 -j ACCEPT -m comment --comment spotify
       iptables -A INPUT -p udp --sport 5353 --dport 1025:65535 -j ACCEPT -m comment --comment spotify
+      iptables -A INPUT -s 10.0.0.198/32 -p udp -m multiport --sports 32768:61000 -m multiport --dports 32768:61000 -m comment --comment "Allow Chromecast UDP data (inbound)" -j ACCEPT
+      iptables -A OUTPUT -d 10.0.0.198/32 -p udp -m multiport --sports 32768:61000 -m multiport --dports 32768:61000 -m comment --comment "Allow Chromecast UDP data (outbound)" -j ACCEPT
+      iptables -A OUTPUT -d 10.0.0.198/32 -p tcp -m multiport --dports 8008:8009 -m comment --comment "Allow Chromecast TCP data (outbound)" -j ACCEPT
+      iptables -A OUTPUT -d 239.255.255.250/32 -p udp --dport 1900 -m comment --comment "Allow Chromecast SSDP" -j ACCEPT
     '';
   };
 
