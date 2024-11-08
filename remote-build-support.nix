@@ -6,7 +6,6 @@
     isNormalUser = true;
     description = "Remote Nix build user";
     group = "nixremote";
-    shell = "/bin/false";
     createHome = true;
   };
 

@@ -12,8 +12,6 @@
     };
   };
 
-  nix.settings.auto-optimise-store = true;
-
   # Set your time zone.
   time.timeZone = "America/Vancouver";
 
@@ -24,6 +22,9 @@
   services.displayManager.sddm.enable = true;
   services.displayManager.sddm.wayland.enable = true;
   services.desktopManager.plasma6.enable = true;
+
+  # Tell Chromium/Electron applications to use Wayland
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
   # Enable colour management, to later be managed with colord-kde
   services.colord.enable = true;
@@ -94,7 +95,7 @@
       thunderbird
       lutris
       protonup-qt
-      parsec-bin
+      unstable.parsec-bin
       krita
       tldr
       mangohud
@@ -130,6 +131,9 @@
       unstable.kdePackages.calligra
       kmymoney
       skrooge
+      # Borg Backup UI
+      vorta
+      unstable.jetbrains.rider
     ];
   };
 
@@ -245,6 +249,7 @@
     aha
     p7zip
     lm_sensors
+    borgbackup
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
