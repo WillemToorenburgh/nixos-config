@@ -133,7 +133,7 @@
       skrooge
       # Borg Backup UI
       vorta
-      unstable.jetbrains.rider
+#       unstable.jetbrains.rider
     ];
   };
 
