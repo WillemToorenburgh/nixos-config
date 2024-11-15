@@ -6,6 +6,7 @@
     ./remote-build-client.nix
 #     <nixos-hardware/microsoft/surface/surface-pro-intel>``
     ./nvidia.nix
+    ./unity-editor-support.nix
   ];
 
 #   microsoft-surface = {
@@ -30,6 +31,8 @@
   systemd.packages = with pkgs; [
     iptsd
   ];
+
+  services.xserver.videoDrivers = [ "displaylink" "modesetting" ];
 
   time.hardwareClockInLocalTime = true;
 
