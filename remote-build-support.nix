@@ -10,4 +10,10 @@
   };
 
   nix.settings.trusted-users = ["nixremote"];
+
+  services.displayManager.sddm.settings = {
+    Users = {
+      HideUsers = "nixremote";
+    };
+  };
 }
