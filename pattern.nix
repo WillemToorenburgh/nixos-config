@@ -64,14 +64,9 @@
   services.xserver.enable = true;
 
   # Make displays behave as expected at login screen
-  services.displayManager.sddm.setupScript = ''
-  ${pkgs.xorg.xrandr}/bin/xrandr --output DP-2 --auto --primary --output DP-1 --left-of DP-1 --rotate left --noprimary --output HDMI-A-1 --right-of DP-2 --noprimary
-  '';
-  #TODO: not working
-  services.xserver.displayManager.setupCommands =
-  ''
-  ${pkgs.xorg.xrandr}/bin/xrandr --output DP-2 --auto --primary --output DP-1 --left-of DP-1 --rotate left --noprimary --output HDMI-A-1 --right-of DP-2 --noprimary
-  '';
+  # TODO: figure out which of these to keep
+  services.displayManager.sddm.setupScript = ''${pkgs.xorg.xrandr}/bin/xrandr --output DP-2 --primary --mode 2560x1440 --pos 1440x560 --rotate normal --output HDMI-A-1 --mode 1920x1080 --pos 4000x320 --rotate left --output DP-1 --mode 2560x1440 --pos 0x0 --rotate left'';
+  services.xserver.displayManager.setupCommands = ''${pkgs.xorg.xrandr}/bin/xrandr --output DP-2 --primary --mode 2560x1440 --pos 1440x560 --rotate normal --output HDMI-A-1 --mode 1920x1080 --pos 4000x320 --rotate left --output DP-1 --mode 2560x1440 --pos 0x0 --rotate left'';
 
   # Support for UPS
   services.apcupsd.enable = false;
