@@ -231,6 +231,8 @@
     kdePackages.kio-extras
     kdePackages.kio-zeroconf
     kdePackages.kdeplasma-addons
+    # Plasma helper for SSH authentication
+    kdePackages.ksshaskpass
     git
     zsh
     easyeffects
@@ -270,6 +272,19 @@
     settings = {
       UseDns = true;
     };
+  };
+
+  # Accompanying SSH client settings
+  # from https://wiki.nixos.org/wiki/SSH_public_key_authentication
+  programs.ssh = {
+    startAgent = true;
+    enableAskPassword = true;
+    askPassword = lib.mkForce "${pkgs.ksshaskpass.out}/bin/ksshaskpass";
+  };
+
+  # Make things actually use the ask password setting
+  environment.variables = {
+    SSH_ASKPASS_REQUIRE = "prefer";
   };
 
   # Open ports in the firewall.
