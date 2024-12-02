@@ -1,21 +1,22 @@
 { pkgs, config, libs, lib, ... }:
 
-# let
+let
 #   # Fixes framebuffer with linux 6.11
 #   fbdev_linux_611_patch = fetchpatch {
 #     url = "https://patch-diff.githubusercontent.com/raw/NVIDIA/open-gpu-kernel-modules/pull/692.patch";
 #     hash = "sha256-OYw8TsHDpBE5DBzdZCBT45+AiznzO9SfECz5/uXN5Uc=";
 #   };
-# in
 
-{
-  #  Enable OpenGL
-    hardware.opengl = {
-        enable = true;
-        driSupport = true;
-        driSupport32Bit = true;
+    # Fixes drm device not working with linux 6.12
+    # https://github.com/NVIDIA/open-gpu-kernel-modules/issues/712
+    drm_fop_flags_linux_612_patch  = pkgs.fetchpatch {
+    url = "https://github.com/Binary-Eater/open-gpu-kernel-modules/commit/8ac26d3c66ea88b0f80504bdd1e907658b41609d.patch";
+    hash = "sha256-+SfIu3uYNQCf/KXhv4PWvruTVKQSh4bgU1moePhe57U=";
     };
 
+in
+
+{
 #     Load nvidia driver for Xorg and Wayland
     services.xserver.videoDrivers = [ "nvidia" ];
 
@@ -77,6 +78,7 @@
             openSha256 = "sha256-/tM3n9huz1MTE6KKtTCBglBMBGGL/GOHi5ZSUag4zXA=";
             settingsSha256 = "sha256-H7uEe34LdmUFcMcS6bz7sbpYhg9zPCb/5AmZZFTx1QA=";
             persistencedSha256 = "sha256-hdszsACWNqkCh8G4VBNitDT85gk9gJe1BlQ8LdrYIkg=";
+            patchesOpen = [ drm_fop_flags_linux_612_patch ];
         };
     };
 

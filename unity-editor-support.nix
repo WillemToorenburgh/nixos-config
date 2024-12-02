@@ -5,7 +5,8 @@ let
     dotnetCorePackages.dotnet_8.sdk
     dotnetCorePackages.dotnet_8.runtime
     mono
-    msbuild
+    # Is using an insecure version of dotnet-sdk
+    # msbuild
   ];
 
 #   rider = pkgs.jetbrains.rider.overrideAttrs (attrs: {
@@ -63,7 +64,8 @@ in
     dotnetCorePackages.dotnet_8.sdk
     dotnetCorePackages.dotnet_8.runtime
     mono
-    msbuild
+    # Using insecure version of dotnet-sdk
+    # msbuild
     unstable.unityhub
     unstable.jetbrains.rider
   ];

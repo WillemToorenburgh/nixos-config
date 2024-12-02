@@ -105,7 +105,8 @@
       fastfetch
       discord
       ungit
-      mypaint
+      # Mypaint is breaking builds while upgrading to 24.11
+      # mypaint
       bottles
       vlc
       ktailctl
@@ -211,6 +212,11 @@
 #     style = "breeze";
 #     platformTheme = "kde";
 #   };
+
+  programs.nano = {
+    enable = true;
+    syntaxHighlight = true;
+  };
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
