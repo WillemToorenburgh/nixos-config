@@ -4,7 +4,7 @@
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    ./nvidia.nix
+    # ./nvidia.nix
     ./remote-build-support.nix
     ./unity-editor-support.nix
   ];
@@ -44,6 +44,15 @@
 
     bluetooth = {
       enable = true;
+    };
+
+    amdgpu = {
+      amdvlk = {
+        enable = true;
+        support32Bit = true;
+      };
+      initrd.enable = true;
+      opencl.enable = true;
     };
   };
 
