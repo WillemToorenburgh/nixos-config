@@ -17,10 +17,10 @@
       efi.canTouchEfiVariables = true;
     };
 
+    kernel.sysctl."kernel.sysrq" = 1;
+    kernelPackages = pkgs.linuxPackages_latest;
     kernelModules = [ "jc42" "nct6775" ];
-    initrd = {
-      kernelModules = [ "nfs" ];
-    };
+    kernelParams = [ "amdgpu.seamless=1" ];
   };
 
   environment.etc = {
@@ -46,10 +46,16 @@
       enable = true;
     };
 
+    graphics = {
+      enable = true;
+      enable32Bit = true;
+      extraPackages = with pkgs; [ rocmPackages.clr.icd ];
+    };
+
     amdgpu = {
       amdvlk = {
-        enable = true;
-        support32Bit.enable = true;
+        enable = false;
+        support32Bit.enable = false;
       };
       initrd.enable = true;
       opencl.enable = true;
@@ -102,7 +108,18 @@
     fwupd-efi
     # Support for NFS
     nfs-utils
+    # Make sure opencl works
+    clinfo
+    # Checking on AMD GPU stuff
+    libva-utils
+    amdgpu_top
+    nvtopPackages.amd
+    lact
   ];
+
+  #* Enable if I ever want to overclock the GPU
+  # systemd.packages = with pkgs; [ lact ];
+  # systemd.services.lact.wantedBy = [ "multi-user.target" ];
 
   fileSystems = {
     "/run/media/willem/Windows" = {
