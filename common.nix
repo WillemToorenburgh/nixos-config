@@ -103,11 +103,11 @@
       transmission_4-qt
       obs-studio
       fastfetch
-      discord
+      unstable.discord-canary
       ungit
       # Mypaint is breaking builds while upgrading to 24.11
       # mypaint
-      bottles
+      unstable.bottles
       vlc
       ktailctl
       # Epson printer support
@@ -241,7 +241,7 @@
     kdePackages.ksshaskpass
     git
     zsh
-    easyeffects
+    unstable.easyeffects
     gparted
     # Powershell my beloved
     powershell
