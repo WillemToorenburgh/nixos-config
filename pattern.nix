@@ -1,12 +1,12 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib,  ... }:
 
 {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    # ./nvidia.nix
     ./remote-build-support.nix
-    ./unity-editor-support.nix
+    # ./unity-editor-support.nix
+    ./ai.nix
   ];
 
   # Kernel modules identified on the system by lm_sensors' sensors-detect
@@ -19,9 +19,11 @@
 
     kernel.sysctl."kernel.sysrq" = 1;
     kernelPackages = pkgs.linuxPackages_latest;
-    kernelModules = [ "jc42" "nct6775" ];
+    kernelModules = [ "jc42" "nct6775" "hid-playstation" ];
     kernelParams = [ "amdgpu.seamless=1" ];
   };
+
+  time.hardwareClockInLocalTime = true;
 
   environment.etc = {
     "sysconfig/lm_sensors".text = ''
@@ -38,7 +40,15 @@
   };
 
   hardware = {
+    # Just enables non-root access to the UHK, still need to install the
+    # uhk-agent package
     keyboard.uhk.enable = true;
+
+    # Enables a community-made Logitech device manager called Solaar
+    logitech.wireless = {
+      enable = true;
+      enableGraphical = true;
+    };
 
     enableAllFirmware = true;
 
@@ -49,6 +59,8 @@
     graphics = {
       enable = true;
       enable32Bit = true;
+      package = pkgs.unstable.mesa;
+      package32 = pkgs.unstable.pkgsi686Linux.mesa;
       extraPackages = with pkgs; [ rocmPackages.clr.icd ];
     };
 
@@ -64,14 +76,28 @@
 
   networking = {
     hostName = "pattern-nixos"; # Define your hostname.
+    domain = "couchlan";
     # wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
     # Configure network proxy if necessary
     # proxy.default = "http://user:password@proxy:port/";
     # proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
-    # Enable networking
-    networkmanager.enable = true;
+    networkmanager = {
+      # Enable networking
+      enable = true;
+
+      # Disable some networking elements to manually manage DNS
+#       dns = "none";
+
+#       insertNameservers = ["100.100.100.100" "10.0.0.6" "10.0.0.1"];
+      insertNameservers = ["10.0.0.6" "10.0.0.1"];
+#         appendNameservers = ["10.0.0.6" "10.0.0.1"];
+
+    };
+
+#     useDHCP = false;
+#     dhcpcd.enable = false;
   };
 
   # Enable the X11 windowing system.
@@ -83,6 +109,11 @@
   services.displayManager.sddm.setupScript = ''${pkgs.xorg.xrandr}/bin/xrandr --output DP-2 --primary --mode 2560x1440 --pos 1440x560 --rotate normal --output HDMI-A-1 --mode 1920x1080 --pos 4000x320 --rotate left --output DP-1 --mode 2560x1440 --pos 0x0 --rotate left'';
   services.xserver.displayManager.setupCommands = ''${pkgs.xorg.xrandr}/bin/xrandr --output DP-2 --primary --mode 2560x1440 --pos 1440x560 --rotate normal --output HDMI-A-1 --mode 1920x1080 --pos 4000x320 --rotate left --output DP-1 --mode 2560x1440 --pos 0x0 --rotate left'';
 
+  # Disable the DualSense controller's touchpad as an input device
+  services.udev.extraRules = ''
+    ACTION=="add|change", KERNEL=="event[0-9]*", ATTRS{name}=="*Wireless Controller Touchpad", ENV{LIBINPUT_IGNORE_DEVICE}="1"
+  '';
+
   # Support for UPS
   services.apcupsd.enable = false;
 
@@ -92,8 +123,8 @@
   # Enable OpenRGB features
   services.hardware.openrgb = {
     enable = true;
-    package = pkgs.openrgb-with-all-plugins;
     motherboard = "amd";
+    package = pkgs.openrgb-with-all-plugins;
   };
 
   # Mount shared NTFS disks in read/write mode
@@ -115,11 +146,19 @@
     amdgpu_top
     nvtopPackages.amd
     lact
+    cameractrls-gtk4
+    # For recovering server data
+    lvm2_vdo
+    mdadm
   ];
 
   #* Enable if I ever want to overclock the GPU
   # systemd.packages = with pkgs; [ lact ];
   # systemd.services.lact.wantedBy = [ "multi-user.target" ];
+
+  swapDevices = [ {
+    device = "/dev/disk/by-uuid/67773c4e-37b7-45ac-9461-582b0f7a5ee2";
+  } ];
 
   fileSystems = {
     "/run/media/willem/Windows" = {
@@ -135,32 +174,105 @@
 
     # Backup destinations
     # TODO: turn these into real Borg jobs
-#     "/run/media/willem/borg/root" = {
-#       device = "storingfraser.couchlan:/WillemStorage/Borg/root";
-#       neededForBoot = false;
-#       fsType = "nfs";
-#       options = [ "nfsvers=4.1" "x-systemd.automount" "x-systemd.idle-timeout=600" "noauto" "nofail" "user" "rw" ];
-#     };
-#     "/run/media/willem/borg/home" = {
-#       device = "storingfraser.couchlan:/WillemStorage/Borg/home";
-#       neededForBoot = false;
-#       fsType = "nfs";
-#       options = [ "nfsvers=4.1" "x-systemd.automount" "x-systemd.idle-timeout=600" "noauto" "nofail" "user" "rw" ];
-#     };
+    "/run/media/willem/borg/root" = {
+      device = "storingfraser.couchlan:/WillemStorage/Borg/root";
+      neededForBoot = false;
+      fsType = "nfs";
+      options = [ "nfsvers=4.1" "x-systemd.automount" "x-systemd.idle-timeout=600" "noauto" "nofail" "user" "rw" ];
+    };
+    "/run/media/willem/borg/home" = {
+      device = "storingfraser.couchlan:/WillemStorage/Borg/home";
+      neededForBoot = false;
+      fsType = "nfs";
+      options = [ "nfsvers=4.1" "x-systemd.automount" "x-systemd.idle-timeout=600" "noauto" "nofail" "user" "rw" ];
+    };
+    "/run/media/willem/borg/files" = {
+      device = "storingfraser.couchlan:/WillemStorage/Borg/files";
+      neededForBoot = false;
+      fsType = "nfs";
+      options = [ "nfsvers=4.1" "x-systemd.automount" "x-systemd.idle-timeout=600" "noauto" "nofail" "user" "rw" ];
+    };
   };
 
-  swapDevices = [ {
-    device = "/dev/disk/by-uuid/67773c4e-37b7-45ac-9461-582b0f7a5ee2";
-  } ];
-
-  time.hardwareClockInLocalTime = true;
-
-#     # Monitor setup using XRandR configs
-#     services.xserver.xrandrHeads = [
-#         "DP-3"
-#         {
-#
-#         }
-#     ];
-
+  services.borgbackup.jobs = {
+    # TODO: is this even necessary?
+    pattern-root = {
+      repo = "/run/media/willem/borg/root";
+      doInit = false;
+      paths = [ "/" ];
+      exclude = [
+        "/nix"
+        "/home"
+        "/run"
+        "/tmp"
+        "/dev"
+        "/proc"
+        "/sys"
+        "'**/.cache'"
+      ];
+      prune.keep = {
+        within = "7d";
+        weekly = 4;
+        monthly = -1;
+      };
+      compression = "auto,lzma";
+      encryption = {
+        mode = "repokey";
+        passCommand = "cat /root/keys/borg_phrase_root";
+      };
+      inhibitsSleep = true;
+      removableDevice = true;
+      startAt = "weekly";
+      persistentTimer = true;
+    };
+    pattern-home = {
+      repo = "/run/media/willem/borg/home";
+      doInit = false;
+      paths = [ "/home" ];
+      exclude = [
+        "/home/willem/Appliations"
+        "/home/willem/Downloads"
+        "'**/.cache'"
+      ];
+      prune.keep = {
+        within = "1d";
+        daily = 7;
+        weekly = 4;
+        monthly = -1;
+      };
+      compression = "auto,lzma";
+      encryption = {
+        mode = "repokey";
+        passCommand = "cat /root/keys/borg_phrase_home";
+      };
+      inhibitsSleep = true;
+      removableDevice = true;
+      startAt = "daily";
+      persistentTimer = true;
+    };
+    pattern-files = {
+      repo = "/run/media/willem/borg/files";
+      doInit = false;
+      paths = [ "/run/media/willem/Files" ];
+      exclude = [
+        "/run/media/willem/Files/SteamLibrary"
+        "'**/.cache'"
+      ];
+      prune.keep = {
+        within = "1d";
+        daily = 7;
+        weekly = 4;
+        monthly = -1;
+      };
+      compression = "auto,lzma";
+      encryption = {
+        mode = "repokey";
+        passCommand = "cat /root/keys/borg_phrase_files";
+      };
+      inhibitsSleep = true;
+      removableDevice = true;
+      startAt = "daily";
+      persistentTimer = true;
+    };
+  };
 }

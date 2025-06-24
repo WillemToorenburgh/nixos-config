@@ -1,9 +1,32 @@
-{ config, pkgs, lib, ... }:
-
 {
+  config,
+  pkgs,
+  lib,
+  ...
+}: let
+    exitGamescopeSessionScript = pkgs.writeTextFile {
+      name = "steamos-session-select";
+      executable = true;
+      destination = "/usr/bin/steamos-session-select";
+      text = ''
+        #!${pkgs.stdenv.shell}
+        steam -shutdown
+      '';
+      # No idea why this is here or what it does
+      checkPhase = ''
+        ${pkgs.stdenv.shell} -n $out/usr/bin/steamos-session-select
+      '';
+    };
+#   exitGamescopeSessionScript =
+#     pkgs.writeShellScriptBin
+#     "steamos-session-select"
+#     ''
+#       steam -shutdown
+#     '';
+in {
   imports = [
-      ./plasma-discover-flatpak.nix
-      ./appimage-support.nix
+    ./plasma-discover-flatpak.nix
+    ./appimage-support.nix
   ];
 
   nixpkgs.config.packageOverrides = pkgs: {
@@ -11,6 +34,9 @@
       config = config.nixpkgs.config;
     };
   };
+
+  # Try out the new rebuild script
+  system.rebuild.enableNg = true;
 
   # Set your time zone.
   time.timeZone = "America/Vancouver";
@@ -39,7 +65,7 @@
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -57,57 +83,41 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-  # Try making Parsec run with ffmpeg7
-#   nixpkgs.overlays = [
-#     (self: super: {
-#       parsec-bin = super.parsec-bin.overrideAttrs {
-#         runtimeDependenciesPath = lib.makeLibraryPath [
-#             pkgs.stdenv.cc.cc
-#             pkgs.libglvnd
-#             pkgs.openssl
-#             pkgs.udev
-#             pkgs.alsa-lib
-#             pkgs.libpulseaudio
-#             pkgs.libva
-#             pkgs.ffmpeg
-#             pkgs.libpng
-#             pkgs.libjpeg8
-#             pkgs.curl
-#             pkgs.xorg.libX11
-#             pkgs.xorg.libXcursor
-#             pkgs.xorg.libXi
-#             pkgs.xorg.libXrandr
-#             pkgs.xorg.libXfixes
-#             pkgs.vulkan-loader
-#         ];};
-#     })
-#   ];
-
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.willem = {
     isNormalUser = true;
     description = "Willem Toorenburgh";
-    extraGroups = [ "networkmanager" "wheel" "libvirtd" "gamemode" ];
+    extraGroups = ["networkmanager" "wheel" "libvirtd" "gamemode"];
     packages = with pkgs; [
       kdePackages.kate
       vscodium
+      # Nix language server
       nixd
+      # Nix code formatter
+      alejandra
+      # Nix package version diff tool
+      nvd
       thunderbird
-      lutris
+      (lutris.override {
+        extraPkgs = pkgs: [
+          # All notes as of 24.11
+          wineWowPackages.full # 32-bit Wine 9.0
+          wineWowPackages.stagingFull # 32-bit Wine 9.20 with staging packages
+        ];
+      })
       protonup-qt
-      unstable.parsec-bin
       krita
       tldr
-      mangohud
+#       mangohud
       goverlay
       transmission_4-qt
       obs-studio
       fastfetch
-      unstable.discord-canary
+      discord
       ungit
       # Mypaint is breaking builds while upgrading to 24.11
       # mypaint
-      unstable.bottles
+      bottles
       vlc
       ktailctl
       # Epson printer support
@@ -125,36 +135,102 @@
       kdePackages.filelight
       kdePackages.plasma-disks
       kdePackages.minuet
-      kdePackages.kontact
+      kdePackages.kget
+      # Disabling as I'm not fond of the interface
+      # kdePackages.kontact
       kdePackages.kmail-account-wizard
       kdePackages.kdepim-addons
+      # KDE audio tag editor
+      kid3-kde
       # KDE office suite
-      unstable.kdePackages.calligra
+      kdePackages.calligra
       kmymoney
       skrooge
       # Borg Backup UI
       vorta
-#       unstable.jetbrains.rider
+      # Nicer monitoring
+      btop-rocm
+      # Precise monitoring
+      atop
+      # Network monitoring
+      iftop
+      # Disk monitoring
+      iotop
+      jetbrains.rider
+      bitwarden-desktop
+      bitwarden-cli
+      virt-viewer
+      # For HDR videos
+      mpv
+      # Clipboard interaction on CLI
+      wl-clipboard-x11
+      unstable.path-of-building
+      gpu-screen-recorder-gtk
     ];
   };
-
-  # Temporarily allow insecure qtwebkit
-  # TODO: remove this as soon as Calligra is upgraded to 4.0
-#   nixpkgs.config.permittedInsecurePackages = [
-#     "qtwebkit-5.212.0-alpha4"
-#   ];
 
   programs.git = {
     enable = true;
     package = pkgs.gitFull;
+    lfs.enable = true;
     config.credential.helper = "libsecret";
   };
 
   programs.steam = {
     # This also enables Steam hardware support, including the Index
     enable = true;
+    package = pkgs.steam.override {
+      extraPkgs = pkgs:
+        with pkgs; [
+          xorg.libXcursor
+          xorg.libXi
+          xorg.libXinerama
+          xorg.libXScrnSaver
+          libpng
+          libpulseaudio
+          libvorbis
+          stdenv.cc.cc.lib
+          libkrb5
+          keyutils
+        ];
+    };
     remotePlay.openFirewall = true;
     localNetworkGameTransfers.openFirewall = true;
+    extraPackages = [ exitGamescopeSessionScript ];
+    # Try to enable a gamescope login session
+    gamescopeSession = {
+      enable = true;
+      args = [
+        "-O DP-1 -W 2560 -H 1440 -r 360"
+        "--mouse-sensitivity 2"
+        "--hdr-enabled"
+        "--hdr-itm-enable"
+        "--hdr-sdr-content-nits=250"
+        #         "--hdr-debug-force-output"
+        #         "--hdr-debug-force-support"
+        #         "--rt"
+        "--expose-wayland"
+      ];
+      env = {
+        "WLR_RENDERER" = "vulkan";
+        "ENABLE_GAMESCOPE_WSI" = "1";
+        "ENABLE_HDR_WSI" = "1";
+        "DXVK_HDR" = "1";
+        "DISABLE_HDR_WSI" = "0";
+      };
+    };
+  };
+
+  nixpkgs.overlays = [
+    (final: prev: {
+      gamescope-wsi = prev.gamescope-wsi.override {enableExecutable = true;};
+    })
+  ];
+
+  programs.gamescope = {
+    enable = true;
+    package = pkgs.gamescope-wsi;
+    capSysNice = true;
   };
 
   # Set up GameMode, which runs various enhancements to improve gaming
@@ -162,9 +238,9 @@
   programs.gamemode = {
     enable = true;
     #TODO: configure this if need be (things like the renice level)
-#     settings = {
-#
-#     };
+    #     settings = {
+    #
+    #     };
   };
 
   services.avahi = {
@@ -172,8 +248,6 @@
     nssmdns4 = true;
     openFirewall = true;
   };
-
-  programs.gamescope.enable = true;
 
   # Font configs
   fonts = {
@@ -184,9 +258,10 @@
       roboto-slab
       roboto-mono
       roboto-serif
-      (nerdfonts.override { fonts = [ "RobotoMono" ]; })
+      nerd-fonts.roboto-mono
     ];
-    fontconfig.defaultFonts.monospace = [ "RobotoMono Nerd Font [GOOG]" ];
+    fontconfig.useEmbeddedBitmaps = true;
+    fontconfig.defaultFonts.monospace = ["RobotoMono Nerd Font [GOOG]"];
   };
 
   # Install firefox.
@@ -196,10 +271,15 @@
   nixpkgs.config.allowUnfree = true;
 
   # Allow Powershell to be a login shell
-  environment.shells = [ pkgs.powershell pkgs.zsh ];
+  environment.shells = [pkgs.powershell pkgs.zsh];
 
   # Enable virtualization
-  virtualisation.libvirtd.enable = true;
+  virtualisation = {
+    libvirtd.enable = true;
+    # Allow USB passthrough. Turn this off when not needed as it allows
+    # arbitrary USB access to all users
+    spiceUSBRedirection.enable = false;
+  };
   programs.virt-manager.enable = true;
 
   # KDE applications and themeing
@@ -208,10 +288,10 @@
     partition-manager.enable = true;
   };
   # Disabling as it's using libsForQt5 and not plasma6-friendly things
-#   qt = {
-#     style = "breeze";
-#     platformTheme = "kde";
-#   };
+  #   qt = {
+  #     style = "breeze";
+  #     platformTheme = "kde";
+  #   };
 
   programs.nano = {
     enable = true;
@@ -221,7 +301,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-  #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+    #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     htop
     kdePackages.kcoreaddons
@@ -239,9 +319,8 @@
     kdePackages.kdeplasma-addons
     # Plasma helper for SSH authentication
     kdePackages.ksshaskpass
-    git
     zsh
-    unstable.easyeffects
+    easyeffects
     gparted
     # Powershell my beloved
     powershell
@@ -250,8 +329,8 @@
     clinfo
     glxinfo
     vulkan-tools
-#     fwupd
-#     fwupd-efi
+    #     fwupd
+    #     fwupd-efi
     pciutils
     wayland-utils
     aha
@@ -270,7 +349,7 @@
 
   # List services that you want to enable:
 
-#   Enable the OpenSSH daemon.
+  #   Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
     openFirewall = true;
@@ -285,7 +364,7 @@
   programs.ssh = {
     startAgent = true;
     enableAskPassword = true;
-    askPassword = lib.mkForce "${pkgs.ksshaskpass.out}/bin/ksshaskpass";
+    askPassword = lib.mkForce "${pkgs.kdePackages.ksshaskpass.out}/bin/ksshaskpass";
   };
 
   # Make things actually use the ask password setting
@@ -295,28 +374,53 @@
 
   # Open ports in the firewall.
   networking.firewall = {
+    allowPing = true;
+    pingLimit = "--limit 1/minute --limit-burst 5";
+
     allowedTCPPorts = [
-    # Allow Spotify access to local network (TCP)
+      # Allow Spotify access to local network (TCP)
       57621
       # Phasmophobia
       27015
       27036
+      # Red Alert 3 community server
+      3783
+      4321
+      28900
+      29900
+      29901
+      16000
     ];
     allowedTCPPortRanges = [
       # Allow KDE Connect (TCP)
-      { from = 1714; to = 1764; }
+      {
+        from = 1714;
+        to = 1764;
+      }
     ];
     allowedUDPPorts = [
-    # Allow Spotify access to local network (UDP)
+      # Allow Spotify access to local network (UDP)
       57621
       # Phasmophobia
       27015
+      # Red alert 3 community server
+      6500
+      6515
+      13139
+      27900
+      16000
     ];
     allowedUDPPortRanges = [
       # Allow KDE Connect (UDP)
-      { from = 1714; to = 1764; }
+      {
+        from = 1714;
+        to = 1764;
+      }
       # Phasmophobia
-      { from = 27031; to = 27036; }
+      {
+        from = 27031;
+        to = 27036;
+      }
     ];
     # Allow Spotify access to multicast DNS
     # NOTE: this needs to be replaced with extraInputRules if switching to nftables
@@ -338,8 +442,8 @@
     useRoutingFeatures = "client";
   };
 
-  networking.nameservers = ["100.100.100.100" "10.0.0.1"];
-  networking.search = ["bear-draconis.ts.net" ".couchlan"];
+  #   networking.nameservers = ["100.100.100.100" "10.0.0.6" "10.0.0.1"];
+  networking.search = ["bear-draconis.ts.net" "couchlan"];
 
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
