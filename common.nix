@@ -87,10 +87,11 @@ in {
   users.users.willem = {
     isNormalUser = true;
     description = "Willem Toorenburgh";
-    extraGroups = ["networkmanager" "wheel" "libvirtd" "gamemode"];
+    extraGroups = ["networkmanager" "wheel" "libvirtd" "gamemode" "dialout"];
     packages = with pkgs; [
       kdePackages.kate
-      vscodium
+      # Switching to unstable for work, to be compatible with BuildGraph extension
+      unstable.vscodium
       # Nix language server
       nixd
       # Nix code formatter
@@ -140,6 +141,12 @@ in {
       # kdePackages.kontact
       kdePackages.kmail-account-wizard
       kdePackages.kdepim-addons
+      # Remote Desktop client
+      kdePackages.krdc
+      # Trying out alternative RDP client
+      freerdp
+      # Another alternative! Sunshine + Moonlight
+      moonlight-qt
       # KDE audio tag editor
       kid3-kde
       # KDE office suite
@@ -157,6 +164,8 @@ in {
       # Disk monitoring
       iotop
       jetbrains.rider
+      # Temporary, for doing remote code together
+      vscode-fhs
       bitwarden-desktop
       bitwarden-cli
       virt-viewer
@@ -164,10 +173,18 @@ in {
       mpv
       # Clipboard interaction on CLI
       wl-clipboard-x11
-      unstable.path-of-building
+      #unstable.path-of-building
       gpu-screen-recorder-gtk
+      # For mucking around with Flash things
+      ruffle
+      # For unpacking RAR archives in Ark
+      unrar
+      # Trying out waypipe, which lets you Wayland across SSH
+      waypipe
     ];
   };
+
+
 
   programs.git = {
     enable = true;
@@ -194,6 +211,8 @@ in {
           keyutils
         ];
     };
+    # Helps Steaminput on Wayland
+    extest.enable = true;
     remotePlay.openFirewall = true;
     localNetworkGameTransfers.openFirewall = true;
     extraPackages = [ exitGamescopeSessionScript ];
@@ -327,7 +346,8 @@ in {
     oh-my-posh
     # Utilities for the KDE Info Center
     clinfo
-    glxinfo
+    # Replaced by mesa-demos in 25.11. Not sure if this means KDE doesn't need it anymore, or what. Removing for now.
+    # glxinfo
     vulkan-tools
     #     fwupd
     #     fwupd-efi
@@ -337,6 +357,7 @@ in {
     p7zip
     lm_sensors
     borgbackup
+    karp
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -371,6 +392,11 @@ in {
   environment.variables = {
     SSH_ASKPASS_REQUIRE = "prefer";
   };
+
+  networking.networkmanager.plugins = with pkgs; [
+    # Provides OpenVPN support to the Plasma network settings interface
+    networkmanager-openvpn
+  ];
 
   # Open ports in the firewall.
   networking.firewall = {

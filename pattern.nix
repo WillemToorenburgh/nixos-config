@@ -6,7 +6,7 @@
     ./hardware-configuration.nix
     ./remote-build-support.nix
     # ./unity-editor-support.nix
-    ./ai.nix
+#     ./ai.nix
   ];
 
   # Kernel modules identified on the system by lm_sensors' sensors-detect
@@ -50,6 +50,9 @@
       enableGraphical = true;
     };
 
+    # Helps with virtual devices
+    uinput.enable = true;
+
     enableAllFirmware = true;
 
     bluetooth = {
@@ -59,20 +62,24 @@
     graphics = {
       enable = true;
       enable32Bit = true;
-      package = pkgs.unstable.mesa;
-      package32 = pkgs.unstable.pkgsi686Linux.mesa;
+      # Hmmmmmmmmmmmmm maybe I shouldn't be doing this
+#       package = pkgs.unstable.mesa;
+#       package32 = pkgs.unstable.pkgsi686Linux.mesa;
       extraPackages = with pkgs; [ rocmPackages.clr.icd ];
     };
 
     amdgpu = {
-      amdvlk = {
-        enable = false;
-        support32Bit.enable = false;
-      };
+      # New in 25.11: support for overdrive mode
+#       overdrive = {
+#         enable = true;
+#       };
       initrd.enable = true;
       opencl.enable = true;
     };
   };
+
+  # Add my user to the uinput group, to go alongside enabling it in hardware
+  users.users.willem.extraGroups = ["uinput"];
 
   networking = {
     hostName = "pattern-nixos"; # Define your hostname.
@@ -122,7 +129,7 @@
 
   # Enable OpenRGB features
   services.hardware.openrgb = {
-    enable = true;
+    enable = false;
     motherboard = "amd";
     package = pkgs.openrgb-with-all-plugins;
   };
@@ -175,19 +182,19 @@
     # Backup destinations
     # TODO: turn these into real Borg jobs
     "/run/media/willem/borg/root" = {
-      device = "storingfraser.couchlan:/WillemStorage/Borg/root";
+      device = "storingfraser.couchlan:/Borg/root";
       neededForBoot = false;
       fsType = "nfs";
       options = [ "nfsvers=4.1" "x-systemd.automount" "x-systemd.idle-timeout=600" "noauto" "nofail" "user" "rw" ];
     };
     "/run/media/willem/borg/home" = {
-      device = "storingfraser.couchlan:/WillemStorage/Borg/home";
+      device = "storingfraser.couchlan:/Borg/home";
       neededForBoot = false;
       fsType = "nfs";
       options = [ "nfsvers=4.1" "x-systemd.automount" "x-systemd.idle-timeout=600" "noauto" "nofail" "user" "rw" ];
     };
     "/run/media/willem/borg/files" = {
-      device = "storingfraser.couchlan:/WillemStorage/Borg/files";
+      device = "storingfraser.couchlan:/Borg/files";
       neededForBoot = false;
       fsType = "nfs";
       options = [ "nfsvers=4.1" "x-systemd.automount" "x-systemd.idle-timeout=600" "noauto" "nofail" "user" "rw" ];
