@@ -3,27 +3,7 @@
   pkgs,
   lib,
   ...
-}: let
-    exitGamescopeSessionScript = pkgs.writeTextFile {
-      name = "steamos-session-select";
-      executable = true;
-      destination = "/usr/bin/steamos-session-select";
-      text = ''
-        #!${pkgs.stdenv.shell}
-        steam -shutdown
-      '';
-      # No idea why this is here or what it does
-      checkPhase = ''
-        ${pkgs.stdenv.shell} -n $out/usr/bin/steamos-session-select
-      '';
-    };
-#   exitGamescopeSessionScript =
-#     pkgs.writeShellScriptBin
-#     "steamos-session-select"
-#     ''
-#       steam -shutdown
-#     '';
-in {
+}: {
   imports = [
     ./plasma-discover-flatpak.nix
     ./appimage-support.nix
@@ -99,18 +79,8 @@ in {
       # Nix package version diff tool
       nvd
       thunderbird
-      (lutris.override {
-        extraPkgs = pkgs: [
-          # All notes as of 24.11
-          wineWowPackages.full # 32-bit Wine 9.0
-          wineWowPackages.stagingFull # 32-bit Wine 9.20 with staging packages
-        ];
-      })
-      protonup-qt
       krita
       tldr
-#       mangohud
-      goverlay
       transmission_4-qt
       obs-studio
       fastfetch
@@ -143,20 +113,18 @@ in {
       kdePackages.kdepim-addons
       # Remote Desktop client
       kdePackages.krdc
-      # Trying out alternative RDP client
-      freerdp
-      # Another alternative! Sunshine + Moonlight
-      moonlight-qt
       # KDE audio tag editor
       kid3-kde
       # KDE office suite
       kdePackages.calligra
       kmymoney
       skrooge
+      # Trying out alternative RDP client
+      freerdp
+      # Another alternative! Sunshine + Moonlight
+      moonlight-qt
       # Borg Backup UI
       vorta
-      # Nicer monitoring
-      btop-rocm
       # Precise monitoring
       atop
       # Network monitoring
@@ -173,10 +141,6 @@ in {
       mpv
       # Clipboard interaction on CLI
       wl-clipboard-x11
-      #unstable.path-of-building
-      gpu-screen-recorder-gtk
-      # For mucking around with Flash things
-      ruffle
       # For unpacking RAR archives in Ark
       unrar
       # Trying out waypipe, which lets you Wayland across SSH
@@ -184,82 +148,11 @@ in {
     ];
   };
 
-
-
   programs.git = {
     enable = true;
     package = pkgs.gitFull;
     lfs.enable = true;
     config.credential.helper = "libsecret";
-  };
-
-  programs.steam = {
-    # This also enables Steam hardware support, including the Index
-    enable = true;
-    package = pkgs.steam.override {
-      extraPkgs = pkgs:
-        with pkgs; [
-          xorg.libXcursor
-          xorg.libXi
-          xorg.libXinerama
-          xorg.libXScrnSaver
-          libpng
-          libpulseaudio
-          libvorbis
-          stdenv.cc.cc.lib
-          libkrb5
-          keyutils
-        ];
-    };
-    # Helps Steaminput on Wayland
-    extest.enable = true;
-    remotePlay.openFirewall = true;
-    localNetworkGameTransfers.openFirewall = true;
-    extraPackages = [ exitGamescopeSessionScript ];
-    # Try to enable a gamescope login session
-    gamescopeSession = {
-      enable = true;
-      args = [
-        "-O DP-1 -W 2560 -H 1440 -r 360"
-        "--mouse-sensitivity 2"
-        "--hdr-enabled"
-        "--hdr-itm-enable"
-        "--hdr-sdr-content-nits=250"
-        #         "--hdr-debug-force-output"
-        #         "--hdr-debug-force-support"
-        #         "--rt"
-        "--expose-wayland"
-      ];
-      env = {
-        "WLR_RENDERER" = "vulkan";
-        "ENABLE_GAMESCOPE_WSI" = "1";
-        "ENABLE_HDR_WSI" = "1";
-        "DXVK_HDR" = "1";
-        "DISABLE_HDR_WSI" = "0";
-      };
-    };
-  };
-
-  nixpkgs.overlays = [
-    (final: prev: {
-      gamescope-wsi = prev.gamescope-wsi.override {enableExecutable = true;};
-    })
-  ];
-
-  programs.gamescope = {
-    enable = true;
-    package = pkgs.gamescope-wsi;
-    capSysNice = true;
-  };
-
-  # Set up GameMode, which runs various enhancements to improve gaming
-  # https://nixos.wiki/wiki/Gamemode
-  programs.gamemode = {
-    enable = true;
-    #TODO: configure this if need be (things like the renice level)
-    #     settings = {
-    #
-    #     };
   };
 
   services.avahi = {
@@ -406,16 +299,6 @@ in {
     allowedTCPPorts = [
       # Allow Spotify access to local network (TCP)
       57621
-      # Phasmophobia
-      27015
-      27036
-      # Red Alert 3 community server
-      3783
-      4321
-      28900
-      29900
-      29901
-      16000
     ];
     allowedTCPPortRanges = [
       # Allow KDE Connect (TCP)
@@ -427,25 +310,12 @@ in {
     allowedUDPPorts = [
       # Allow Spotify access to local network (UDP)
       57621
-      # Phasmophobia
-      27015
-      # Red alert 3 community server
-      6500
-      6515
-      13139
-      27900
-      16000
     ];
     allowedUDPPortRanges = [
       # Allow KDE Connect (UDP)
       {
         from = 1714;
         to = 1764;
-      }
-      # Phasmophobia
-      {
-        from = 27031;
-        to = 27036;
       }
     ];
     # Allow Spotify access to multicast DNS

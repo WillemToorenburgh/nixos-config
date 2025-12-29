@@ -7,6 +7,7 @@
     ./remote-build-support.nix
     # ./unity-editor-support.nix
 #     ./ai.nix
+    ./gaming.nix
   ];
 
   # Kernel modules identified on the system by lm_sensors' sensors-detect
@@ -78,8 +79,19 @@
     };
   };
 
-  # Add my user to the uinput group, to go alongside enabling it in hardware
-  users.users.willem.extraGroups = ["uinput"];
+  users.users.willem = {
+    # Add my user to the uinput group, to go alongside enabling it in hardware
+    extraGroups = ["uinput"];
+    packages = with pkgs; [
+      # Nicer monitoring
+      btop-rocm
+      amdgpu_top
+      nvtopPackages.amd
+      cameractrls-gtk4
+      # UHK Agent support
+      uhk-agent
+    ];
+  };
 
   networking = {
     hostName = "pattern-nixos"; # Define your hostname.
@@ -140,8 +152,6 @@
   environment.systemPackages = with pkgs; [
     # Make NTFS-3G utilities available, even though the above line installs it
     ntfs3g
-    # UHK Agent support
-    uhk-agent
     # Also mainly for System Info
     fwupd-efi
     # Support for NFS
@@ -150,10 +160,7 @@
     clinfo
     # Checking on AMD GPU stuff
     libva-utils
-    amdgpu_top
-    nvtopPackages.amd
     lact
-    cameractrls-gtk4
     # For recovering server data
     lvm2_vdo
     mdadm
