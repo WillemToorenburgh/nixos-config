@@ -4,25 +4,38 @@
   lib,
   ...
 }: let
-    exitGamescopeSessionScript = pkgs.writeTextFile {
-      name = "steamos-session-select";
-      executable = true;
-      destination = "/usr/bin/steamos-session-select";
-      text = ''
-        #!${pkgs.stdenv.shell}
-        steam -shutdown
-      '';
-      # No idea why this is here or what it does
-      checkPhase = ''
-        ${pkgs.stdenv.shell} -n $out/usr/bin/steamos-session-select
-      '';
-    };
+  exitGamescopeSessionScript = pkgs.writeTextFile {
+    name = "steamos-session-select";
+    executable = true;
+    destination = "/usr/bin/steamos-session-select";
+    text = ''
+      #!${pkgs.stdenv.shell}
+      steam -shutdown
+    '';
+    # No idea why this is here or what it does
+    checkPhase = ''
+      ${pkgs.stdenv.shell} -n $out/usr/bin/steamos-session-select
+    '';
+  };
 #   exitGamescopeSessionScript =
 #     pkgs.writeShellScriptBin
 #     "steamos-session-select"
 #     ''
 #       steam -shutdown
 #     '';
+
+  bizHawkRepo = pkgs.fetchFromGitHub {
+    owner = "TASEmulators";
+    repo = "BizHawk";
+    # Tagged version doesn't include Nix updates for 2.11
+    # Using master instead
+    # tag = "2.11";
+    rev = "ce5fe4e3fa521fb66f223f07b2de1a52bdc0818c";
+    hash = "sha256-YDL9kNlvkIXQUAZDUyPloSRsakVvmZrE4I22YlPkBpo=";
+    fetchSubmodules = true;
+  };
+
+  bizHawkImport = import bizHawkRepo { system = builtins.currentSystem; };
 in {
 
   # Allow unfree packages, required for Steam
@@ -46,7 +59,10 @@ in {
       gpu-screen-recorder-gtk
       # For mucking around with Flash things
       ruffle
-    ];
+      # PS4 emulator
+      unstable.shadps4
+      ] ++ [ bizHawkImport.emuhawk-2_11-bin ];
+#     ] ++ [ bizHawkImport.emuhawk-latest ];
   };
 
   nixpkgs.overlays = [
