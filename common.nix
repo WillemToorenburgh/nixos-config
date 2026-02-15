@@ -5,9 +5,12 @@
   ...
 }: {
   imports = [
-    ./plasma-discover-flatpak.nix
     ./appimage-support.nix
+    ./rider.nix
   ];
+
+  # Allow unfree packages
+  nixpkgs.config.allowUnfree = true;
 
   nixpkgs.config.packageOverrides = pkgs: {
     unstable = import <nixos-unstable> {
@@ -24,17 +27,6 @@
   # Select internationalisation properties.
   i18n.defaultLocale = "en_CA.UTF-8";
 
-  # Enable the KDE Plasma Desktop Environment.
-  services.displayManager.sddm.enable = true;
-  services.displayManager.sddm.wayland.enable = true;
-  services.desktopManager.plasma6.enable = true;
-
-  # Tell Chromium/Electron applications to use Wayland
-  environment.sessionVariables.NIXOS_OZONE_WL = "1";
-
-  # Enable colour management, to later be managed with colord-kde
-  services.colord.enable = true;
-
   # Configure keymap in X11
   services.xserver.xkb = {
     layout = "us";
@@ -44,32 +36,12 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  # Enable sound with pipewire.
-  services.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    #jack.enable = true;
-
-    # use the example session manager (no others are packaged yet so this is enabled by default,
-    # no need to redefine it in your config for now)
-    #media-session.enable = true;
-  };
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
-
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.willem = {
     isNormalUser = true;
     description = "Willem Toorenburgh";
     extraGroups = ["networkmanager" "wheel" "libvirtd" "gamemode" "dialout"];
     packages = with pkgs; [
-      kdePackages.kate
       # Switching to unstable for work, to be compatible with BuildGraph extension
       unstable.vscodium
       # Nix language server
@@ -79,7 +51,6 @@
       # Nix package version diff tool
       nvd
       thunderbird
-      krita
       tldr
       transmission_4-qt
       obs-studio
@@ -92,31 +63,16 @@
       vlc
       ktailctl
       # Epson printer support
-      epson-escpr
+#       epson-escpr
       # Try out these and eliminate whichever I don't want to use
-      kdePackages.yakuake
-      kdePackages.ktorrent
-      kdePackages.merkuro
-      kdePackages.kleopatra
+#       kdePackages.kleopatra
       kdePackages.kgpg
-      kdePackages.kcalc
-      kdePackages.kalk
-      kdePackages.kbackup
-      kdePackages.isoimagewriter
-      kdePackages.filelight
-      kdePackages.plasma-disks
+#       kdePackages.isoimagewriter
       kdePackages.minuet
-      kdePackages.kget
-      # Disabling as I'm not fond of the interface
-      # kdePackages.kontact
-      kdePackages.kmail-account-wizard
-      kdePackages.kdepim-addons
       # Remote Desktop client
       kdePackages.krdc
       # KDE audio tag editor
       kid3-kde
-      # KDE office suite
-      kdePackages.calligra
       kmymoney
       skrooge
       # Trying out alternative RDP client
@@ -131,9 +87,6 @@
       iftop
       # Disk monitoring
       iotop
-      jetbrains.rider
-      # Temporary, for doing remote code together
-      vscode-fhs
       bitwarden-desktop
       bitwarden-cli
       virt-viewer
@@ -141,10 +94,12 @@
       mpv
       # Clipboard interaction on CLI
       wl-clipboard-x11
-      # For unpacking RAR archives in Ark
-      unrar
       # Trying out waypipe, which lets you Wayland across SSH
-      waypipe
+      unstable.waypipe
+      # Allows waypipe's --xwls flag to work, forwarding xwayland clients
+      xwayland-satellite
+      # Trying out the Zed editor
+      zed-editor-fhs
     ];
   };
 
@@ -161,26 +116,8 @@
     openFirewall = true;
   };
 
-  # Font configs
-  fonts = {
-    enableDefaultPackages = true;
-    fontDir.enable = true;
-    packages = with pkgs; [
-      roboto
-      roboto-slab
-      roboto-mono
-      roboto-serif
-      nerd-fonts.roboto-mono
-    ];
-    fontconfig.useEmbeddedBitmaps = true;
-    fontconfig.defaultFonts.monospace = ["RobotoMono Nerd Font [GOOG]"];
-  };
-
   # Install firefox.
   programs.firefox.enable = true;
-
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
 
   # Allow Powershell to be a login shell
   environment.shells = [pkgs.powershell pkgs.zsh];
@@ -194,20 +131,17 @@
   };
   programs.virt-manager.enable = true;
 
-  # KDE applications and themeing
-  programs = {
-    kdeconnect.enable = true;
-    partition-manager.enable = true;
-  };
-  # Disabling as it's using libsForQt5 and not plasma6-friendly things
-  #   qt = {
-  #     style = "breeze";
-  #     platformTheme = "kde";
-  #   };
-
   programs.nano = {
     enable = true;
     syntaxHighlight = true;
+  };
+
+  programs.vscode = {
+    enable = false;
+    package = pkgs.unstable.vscode-fhs;
+    extensions = with pkgs.vscode-extensions; [
+      ms-vscode.powershell
+    ];
   };
 
   # List packages installed in system profile. To search, run:
@@ -216,54 +150,21 @@
     #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     htop
-    kdePackages.kcoreaddons
-    kdePackages.colord-kde
-    kdePackages.sddm-kcm
-    kdePackages.ksystemlog
-    kdePackages.kaccounts-providers
-    kdePackages.kaccounts-integration
-    kdePackages.kio
-    kdePackages.kio-fuse
-    kdePackages.kio-gdrive
-    kdePackages.kio-admin
-    kdePackages.kio-extras
-    kdePackages.kio-zeroconf
-    kdePackages.kdeplasma-addons
-    # Plasma helper for SSH authentication
-    kdePackages.ksshaskpass
     zsh
     easyeffects
     gparted
     # Powershell my beloved
     powershell
     oh-my-posh
-    # Utilities for the KDE Info Center
-    clinfo
-    # Replaced by mesa-demos in 25.11. Not sure if this means KDE doesn't need it anymore, or what. Removing for now.
-    # glxinfo
-    vulkan-tools
-    #     fwupd
-    #     fwupd-efi
-    pciutils
-    wayland-utils
     aha
     p7zip
     lm_sensors
     borgbackup
-    karp
   ];
-
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
 
   # List services that you want to enable:
 
-  #   Enable the OpenSSH daemon.
+  # Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
     openFirewall = true;

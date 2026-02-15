@@ -4,6 +4,7 @@
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./desktop-environment.nix
     ./remote-build-support.nix
     # ./unity-editor-support.nix
 #     ./ai.nix
