@@ -81,12 +81,6 @@
       moonlight-qt
       # Borg Backup UI
       vorta
-      # Precise monitoring
-      atop
-      # Network monitoring
-      iftop
-      # Disk monitoring
-      iotop
       bitwarden-desktop
       bitwarden-cli
       virt-viewer
@@ -114,6 +108,24 @@
     enable = true;
     nssmdns4 = true;
     openFirewall = true;
+  };
+
+  # Nix-specific command not found helper
+  programs.command-not-found.enable = true;
+
+  # General monitoring tool; ol' reliable
+  programs.htop.enable = true;
+
+  # Disk monitoring tool
+  programs.iotop.enable = true;
+
+  # Network monitoring tool
+  programs.iftop.enable = true;
+
+  # Precise monitoring tool
+  programs.atop = {
+    enable = true;
+    setuidWrapper.enable = true;
   };
 
   # Install firefox.
@@ -149,7 +161,6 @@
   environment.systemPackages = with pkgs; [
     #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
-    htop
     zsh
     easyeffects
     gparted

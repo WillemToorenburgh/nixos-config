@@ -41,6 +41,12 @@ in {
   # Allow unfree packages, required for Steam
   nixpkgs.config.allowUnfree = true;
 
+  nixpkgs.overlays = [
+    (final: prev: {
+      gamescope-wsi = prev.gamescope-wsi.override {enableExecutable = true;};
+    })
+  ];
+
   users.users.willem.packages = with pkgs; [
       (lutris.override {
         extraPkgs = pkgs: [
@@ -55,35 +61,12 @@ in {
       # Another alternative! Sunshine + Moonlight
       moonlight-qt
       #unstable.path-of-building
-      gpu-screen-recorder-gtk
       # For mucking around with Flash things
       ruffle
       # PS4 emulator
       unstable.shadps4
       ] ++ [ bizHawkImport.emuhawk-2_11-bin ];
 #     ] ++ [ bizHawkImport.emuhawk-latest ];
-
-  nixpkgs.overlays = [
-    (final: prev: {
-      gamescope-wsi = prev.gamescope-wsi.override {enableExecutable = true;};
-    })
-  ];
-
-  programs.gamescope = {
-    enable = true;
-    package = pkgs.gamescope-wsi;
-    capSysNice = true;
-  };
-
-  # Set up GameMode, which runs various enhancements to improve gaming
-  # https://nixos.wiki/wiki/Gamemode
-  programs.gamemode = {
-    enable = true;
-    #TODO: configure this if need be (things like the renice level)
-    #     settings = {
-    #
-    #     };
-  };
 
   programs.steam = {
     # This also enables Steam hardware support, including the Index
@@ -132,6 +115,25 @@ in {
       };
     };
   };
+
+  programs.gamescope = {
+    enable = true;
+    package = pkgs.gamescope-wsi;
+    capSysNice = true;
+  };
+
+  # Set up GameMode, which runs various enhancements to improve gaming
+  # https://nixos.wiki/wiki/Gamemode
+  programs.gamemode = {
+    enable = true;
+    #TODO: configure this if need be (things like the renice level)
+    #     settings = {
+    #
+    #     };
+  };
+
+  # Simple screen recording; also sets up appropriate permissions for prompt-less recording
+  programs.gpu-screen-recorder.enable = true;
 
   # Open ports in the firewall.
   networking.firewall = {
