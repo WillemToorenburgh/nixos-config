@@ -41,8 +41,7 @@ in {
   # Allow unfree packages, required for Steam
   nixpkgs.config.allowUnfree = true;
 
-  users.users.willem = {
-    packages = with pkgs; [
+  users.users.willem.packages = with pkgs; [
       (lutris.override {
         extraPkgs = pkgs: [
           # All notes as of 24.11
@@ -63,7 +62,6 @@ in {
       unstable.shadps4
       ] ++ [ bizHawkImport.emuhawk-2_11-bin ];
 #     ] ++ [ bizHawkImport.emuhawk-latest ];
-  };
 
   nixpkgs.overlays = [
     (final: prev: {
