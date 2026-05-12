@@ -67,6 +67,11 @@
     };
   };
 
+  networking.networkmanager.plugins = with pkgs; [
+    # Provides OpenVPN support to the Plasma network settings interface
+    networkmanager-openvpn
+  ];
+
   # Packages to install on a system-level
   environment.systemPackages = with pkgs.kdePackages; [
     ## Plugins for various Plasma elements
@@ -128,14 +133,14 @@
     # Download managers
     kget
     ktorrent
+
+    # KDE office suite
+    calligra
   ] ++ (with pkgs; [
     # PDF editor
     karp
 
     # Raster image editor
     krita
-
-    # KDE office suite
-    kdePackages.calligra
   ]);
 }
